@@ -1,0 +1,114 @@
+﻿@page
+@model WebApplication1.index
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html lang="">
+<head>
+    <title></title>
+</head>
+<body>
+<div>
+    <div class="container" style="background-color: #fff0de;">
+        <h2>Download site from url</h2>
+        <form id="url-form" asp-controller="Url" asp-action="DownloadFromUrl" method="post">
+            <label for="url">URL:</label>
+            <input type="text" id="url" name="url">
+            <button type="submit">Download</button>
+        </form>
+        <br/>
+
+        <div>
+            <h2>Site list</h2>
+            <ul id="url-history"></ul>
+        </div>
+        <div>
+            <form id="searchForm">
+                <label for="keyword">Search from sites:</label>
+                <input type="text" id="keyword" name="keyword"/>
+                <button type="submit" id="submit">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+<div>
+    <div id="render-box"></div>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#url-form').on('submit', function(event) {
+            event.preventDefault();
+            $.post('/Url/DownloadFromUrl', $(this).serialize(), function() {
+                updateUrlHistory();
+                $('#url').empty();
+            });
+        });
+        
+        deleteItem = (id) => {
+            $.ajax({
+                url: `/Url/RemoveItem?id=${id}`,
+                type: 'DELETE',
+                success: function(result) {
+                    updateUrlHistory();
+                }
+            });
+        }
+        
+        renderUrl = (id) => {
+            $.ajax({
+                url: `/Url/GetById?id=${id}`,
+                type: 'GET',
+                success: function(result) {
+                let box = $('#render-box')
+                    box.empty();
+                    box.append(result.html);
+                }
+        });
+        }
+
+        updateUrlHistory = () => {
+            $.getJSON('/Url/GetDownloadedUrlsHistory', function(data) {
+                $('#url-history').empty();
+                $.each(data, function(index, item) {
+                    renderList(item);
+                });
+            });
+        }
+
+        $("#render-box a").on("click", function(event) {
+            event.preventDefault();
+        });
+
+        $('#searchForm').on('submit', function(event) {
+            event.preventDefault();
+            var keyword = $('#keyword').val();
+            if (!keyword)
+                updateUrlHistory();
+            $.ajax({
+                url: '/Url/GetByKeyword',
+                type: 'GET',
+                data: { keyword: keyword },
+                success: function(data) {
+                    $('#url-history').empty();
+                    $.each(data, function(i, item) {
+                        renderList(item);
+                    });
+                }
+            });
+        });
+        
+        renderList = (item) => {
+            $('#url-history').append('<li><a href="#" onclick="renderUrl(\'' + item.uuid + '\')">' + item.url +
+                '</a> | <a class="delete" href="#" onclick="deleteItem(\'' + item.uuid + '\')">x</a></li>');
+        }
+        updateUrlHistory();
+    });
+</script>
+</body>
+</html>
