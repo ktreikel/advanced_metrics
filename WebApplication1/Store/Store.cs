@@ -10,26 +10,25 @@ public class Store : IStore
     {
     }
 
-    public void StoreItem(UrlDto item)
+    public async Task StoreItem(UrlDto item)
     {
-        if (_storedItems.All(si => si.Url != item.Url))
+       if (_storedItems.All(si => si.Url != item.Url))
             _storedItems.Add(item);
     }
 
-    public UrlDto GetItem(Guid id)
+    public async Task<UrlDto> GetItem(Guid id)
     {
-        var item = _storedItems.FirstOrDefault(k => k.Uuid == id);
-        return item ?? new UrlDto();
+        return await Task.FromResult(_storedItems.FirstOrDefault(k => k.Uuid == id)) ?? new UrlDto();
     }
 
-    public List<UrlDto> GetAllItems()
+    public async Task<List<UrlDto>> GetAllItems()
     {
-        return _storedItems;
+        return await Task.FromResult(_storedItems);
     }
 
-    public List<UrlDto> GetItemsContainingKeyword(string key)
+    public async Task<List<UrlDto>> GetItemsContainingKeyword(string key)
     {
-        return _storedItems.Where(urlDto => urlDto.Html.Contains(key, StringComparison.OrdinalIgnoreCase)).ToList();
+        return await Task.FromResult(_storedItems.Where(urlDto => urlDto.Html.Contains(key, StringComparison.OrdinalIgnoreCase)).ToList());
     }
 
     public bool RemoveItem(Guid uuid)
